@@ -1,0 +1,74 @@
+package sendmessage
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"testing"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+	k "github.com/icon-project/btp/cmd/btpsimple/module/icon"
+	w "github.com/icon-project/btp/integration_test/setup"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestSendValidMessage(t *testing.T) {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		panic(err)
+	}
+
+	if err != nil {
+		return
+	}
+	s := httptest.NewServer(http.HandlerFunc(w.WsEndpoint))
+	log.Println(s)
+	cli.NegotiateAPIVersion(ctx)
+
+	reader, err := cli.ImagePull(ctx, "docker.io/library/alpine", types.ImagePullOptions{})
+	if err != nil {
+		// panic err;
+	}
+	// c:= D.Client{
+	// 	Endpoint:     "end",
+	// 	CustomHeader: map[string]string{},
+	// 	Pre: func(req *http.Request) error {
+	// 		return err
+	// 	},
+	// }
+	// E:= k.Client{
+	// 	Client: &D.Client{},
+	// }
+	E := k.Client{}
+	fa := k.TransactionParam{
+		Version:     "0x01",
+		FromAddress: "icon",
+		ToAddress:   "Near",
+		Value:       "0x5",
+		StepLimit:   "0x7",
+		Timestamp:   "12",
+		NetworkID:   "9",
+		Nonce:       "8",
+		Signature:   "MyPassword",
+		DataType:    "Data",
+		Data:        4,
+		TxHash:      "0x20",
+	}
+	// v, err := E.SendTransaction(&fa)
+	value := os.Getenv("sendmessage")
+	var r k.HexBytes
+	if _, err := E.Do(value, fa, &r); err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(r)
+
+	assert := assert.New(t)
+	assert.Equal(true, true)
+	io.Copy(os.Stdout, reader)
+}
